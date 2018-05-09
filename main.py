@@ -1,20 +1,34 @@
-import heapq
 import math
 import numpy
 import pygame
 import sys
+import time
 
+
+path = []
+# 2 dimensional array for obstacles
+obstacles = numpy.array([
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 0, 0, 0, 0, 1, 1, 0, 1, 0],
+    [0, 0, 0, 1, 1, 0, 0, 0, 1, 0],
+])
 
 # define A*
 class Node(object):
-    def __init__(self, x, y, direction, cost):
+    def __init__(self, x, y, cost):
         """
         Initialize new cell
         @param x cell x coordinate
         @param y cell y coordinate
         @param reachable is cell reachable? not a wall?
         """
-        self.direction = direction
         self.x = x
         self.y = y
         self.parent = None
@@ -25,77 +39,46 @@ class Node(object):
 
 
 class AStar(object):
-    def __init__(self, startx, starty, direction, endx, endy, costs):
+    def __init__(self, startx, starty, endx, endy, costs):
         self.opened = []
-        heapq.heapify(self.opened)
-        self.closed = set()
+        self.closed = []
         self.cells = []
-        self.grid_height = 10
-        self.grid_width = 10
-        directions = ["N", "E", "W", "S"]
-        for y in range(self.grid_height):
+        for y in range(10):
             self.cells.append([])
-            for x in range(self.grid_width):
-                self.cells[y].append([])
-                for i in range(4):
-                    self.cells[y][x].append(
-                        Node(x, y, directions[i], costs[y][x]))
-        self.start = self.get_cell(startx, starty, direction)
-        self.end = self.get_cell(endx, endy, direction)
+            for x in range(10):
+                self.cells[y].append(
+                    Node(x, y, costs[y][x])
+                )
+        self.start = self.get_cell(startx, starty)
+        self.end = self.get_cell(endx, endy)
 
     def get_heuristic(self, cell):
         return abs(cell.x - self.end.x) + abs(cell.y - self.end.y)
 
-    def get_cell(self, x, y, direction):
-        if direction == "N":
-            return self.cells[y][x][0]
-        if direction == "E":
-            return self.cells[y][x][1]
-        if direction == "W":
-            return self.cells[y][x][2]
-        if direction == "S":
-            return self.cells[y][x][3]
+    def get_cell(self, x, y):
+        return self.cells[y][x]
 
     def get_adjacent_cells(self, cell):
         cells = []
-        if cell.direction == "N":
-            if cell.y > 0:
-                cells.append(self.get_cell(cell.x, cell.y - 1, cell.direction))
-            cells.append(self.get_cell(cell.x, cell.y, "E"))
-            cells.append(self.get_cell(cell.x, cell.y, "W"))
-        elif cell.direction == "W":
-            if cell.x > 0:
-                cells.append(self.get_cell(cell.x - 1, cell.y, cell.direction))
-            cells.append(self.get_cell(cell.x, cell.y, "N"))
-            cells.append(self.get_cell(cell.x, cell.y, "S"))
-        elif cell.direction == "E":
-            if cell.x < 9:
-                cells.append(self.get_cell(cell.x + 1, cell.y, cell.direction))
-            cells.append(self.get_cell(cell.x, cell.y, "S"))
-            cells.append(self.get_cell(cell.x, cell.y, "N"))
-        elif cell.direction == "S":
-            if cell.y < 9:
-                cells.append(self.get_cell(cell.x, cell.y + 1, cell.direction))
-            cells.append(self.get_cell(cell.x, cell.y, "W"))
-            cells.append(self.get_cell(cell.x, cell.y, "E"))
+        if cell.x > 0 and obstacles[cell.y][cell.x - 1] == 0:
+            cells.append(self.get_cell(cell.x - 1, cell.y))
+        if cell.x < 9 and obstacles[cell.y][cell.x + 1] == 0:
+            cells.append(self.get_cell(cell.x + 1, cell.y))
+        if cell.y > 0 and obstacles[cell.y - 1][cell.x] == 0:
+            cells.append(self.get_cell(cell.x, cell.y - 1))
+        if cell.y < 9 and obstacles[cell.y + 1][cell.x] == 0:
+            cells.append(self.get_cell(cell.x, cell.y + 1))
+
         return cells
 
     def display_path(self):
         cell = self.end
-        print('path:')
+
         path = []
-        i = 0
-        while cell.parent is not self.start:
+        while cell is not self.start:
+            path.append((cell.x, cell.y))
             cell = cell.parent
-            path.append([])
-            print('cell: %d,%d,%s' % (cell.x, cell.y, cell.direction))
-            x = cell.x
-            y = cell.y
-            d = cell.direction
-            path[i].append(x)
-            path[i].append(y)
-            path[i].append(d)
-            i = i + 1
+        path.reverse()
         return path
 
     def update_cell(self, adj, cell):
@@ -105,27 +88,34 @@ class AStar(object):
         adj.f = adj.h + adj.g
 
     def process(self):
-        heapq.heappush(self.opened, (self.start.f, self.start))
+        for y in range(10):
+            for x in range(10):
+                self.cells[y][x].h = self.get_heuristic(self.cells[y][x])
+
+        cell = self.start
+
+        self.opened.append((cell.f, cell))
+
         while len(self.opened):
-            # pop cell from heap queue
-            f, cell = heapq.heappop(self.opened)
-            # add cell to closed list so we don't process it twice
-            self.closed.add(cell)
-            # if ending cell, display found path
-            if cell is self.end:
+            self.opened.sort(key=lambda tup: tup[0])
+            key, cell = self.opened.pop(0)
+            self.closed.append(cell)
+
+            if cell == self.end:
+                print('path: ')
+                print(self.display_path())
                 return self.display_path()
-                break
-            # get adjacent cells for cell
+
             adj_cells = self.get_adjacent_cells(cell)
             for adj_cell in adj_cells:
+                if adj_cell.g == 0:
+                    adj_cell.g = 10 + cell.g
+                    adj_cell.parent = cell
+                adj_cell.f = adj_cell.g + adj_cell.h
                 if adj_cell not in self.closed:
-                    if (adj_cell.f, adj_cell) in self.opened:
-                        if adj_cell.g > cell.g + adj_cell.cost:
-                            self.update_cell(adj_cell, cell)
-                    else:
-                        self.update_cell(adj_cell, cell)
-                        # add adj cell to open list
-                        heapq.heappush(self.opened, (adj_cell.f, adj_cell))
+                    self.opened.append((adj_cell.f, adj_cell))
+
+
 
 
 pygame.init()
@@ -165,33 +155,12 @@ garbage = pygame.transform.scale(garbage, (car_w, car_h))
 # 2 dimensional array of 10x10 elements
 board = numpy.arange(100).reshape(10, 10)
 
-# 2 dimensional array for obstacles
-obstacles = numpy.array([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 1, 1, 0, 1, 0],
-    [0, 0, 0, 1, 1, 0, 0, 0, 1, 0],
-])
-
-# weights array
-weigth = numpy.array([
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-    [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
-])
+# define array of costs
+costs = []
+for row in range(10):
+    costs.append([])
+    for column in range(10):
+        costs[row].append(10)
 
 
 def can_move_up(x, y):
@@ -242,6 +211,8 @@ garbageC_y = 9 * step
 # Params for drawing
 clock = pygame.time.Clock()
 clear = 0
+moves = 0
+
 
 while True:
     for event in pygame.event.get():
@@ -251,106 +222,91 @@ while True:
         elif event.type == pygame.MOUSEBUTTONDOWN:
             # User clicks the mouse. Get the position
             pos = pygame.mouse.get_pos()
-            goal_x = math.ceil(pos[0]/40)
-            goal_y = math.ceil(pos[1]/40)
-            print('{},{}'.format(goal_x, goal_y))
-            path = AStar(x, y, direction, goal_x, goal_y, weigth).process()
+            goal_x = math.floor(pos[0]/40)
+            goal_y = math.floor(pos[1]/40)
+            print('start: {},{}'.format(math.floor(x / 40), math.floor(y / 40)))
+            print('goal: {},{}'.format(goal_x, goal_y))
+            path = AStar(math.floor(x / 40), math.floor(y / 40), goal_x, goal_y, costs).process()
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             pygame.quit()
             sys.exit()
 
-    pressed = pygame.key.get_pressed()
+    if moves < len(path) and path:
+        x = path[moves][0] * 40
+        y = path[moves][1] * 40
+        moves += 1
+    else:
+        moves = 0
+        path = []
 
-    if pressed[pygame.K_a]:
-        if direction == 'S':
-            direction = 'E'
-        elif direction == 'E':
-            direction = 'N'
-        elif direction == 'N':
-            direction = 'W'
-        elif direction == 'W':
-            direction = 'S'
-        print('direction - {}'.format(direction))
 
-    if pressed[pygame.K_d]:
-        if direction == 'S':
-            direction = 'W'
-        elif direction == 'E':
-            direction = 'S'
-        elif direction == 'N':
-            direction = 'E'
-        elif direction == 'W':
-            direction = 'N'
-        print('direction - {}'.format(direction))
-
-    if pressed[pygame.K_w]:
-        if direction == 'N' and can_move_up(x, y):
-            y -= step
-        elif direction == 'S' and can_move_down(x, y):
-            y += step
-        elif direction == 'E' and can_move_right(x, y):
-            x += step
-        elif direction == 'W' and can_move_left(x, y):
-            x -= step
-
-    if pressed[pygame.K_s]:
-        if direction == 'N' and can_move_down(x, y):
-            y += step
-        elif direction == 'S' and can_move_up(x, y):
-            y -= step
-        elif direction == 'E' and can_move_left(x, y):
-            x -= step
-        elif direction == 'W' and can_move_right(x, y):
-            x += step
-
-    if y >= height - car_h:
-        y = height - step
-    elif y < 0:
-        y = 0
-    if x > width - car_w:
-        x = width - car_w
-    elif x < 0:
-        x = 0
-
-    position = board[math.ceil(x/step), math.ceil(y/step)]
 
     row_i = 0
     col_i = 0
     for row in obstacles:
         for cell in row:
             if cell == 1:
-                pygame.draw.rect(screen, (255, 255, 255), (col_i, row_i, step, step))
+                pygame.draw.rect(screen, (255, 255, 255),
+                                 (col_i, row_i, step, step))
+            elif cell == 3:
+                pass
             col_i += step
             if col_i == width:
                 col_i = 0
         row_i += step
         if row_i == height:
             row_i = 0
-
     screen.blit(car, (x, y))
-    screen.blit(can, (width - 40, height - 40))
-
-    if x == garbageA_x and y == garbageA_y:
-        garbageA_x = width - step
-        garbageA_y = height - step
-        clear += 1
-    if x == garbageB_x and y == garbageB_y:
-        garbageB_x = width - step
-        garbageB_y = height - step
-        clear += 1
-    if x == garbageC_x and y == garbageC_y:
-        garbageC_x = width - step
-        garbageC_y = height - step
-        clear += 1
-
-    screen.blit(garbage, (garbageA_x, garbageA_y))
-    screen.blit(garbage, (garbageB_x, garbageB_y))
-    screen.blit(garbage, (garbageC_x, garbageC_y))
-
-    if clear == 3:
-        screen.fill((0, 0, 0))
-        screen.blit(text_success, ((width/2)-50, (height/2)-50))
 
     pygame.display.flip()
     screen.fill((0, 0, 0))
     clock.tick(15)
+
+    # pressed = pygame.key.get_pressed()
+    #
+    # if pressed[pygame.K_w]:
+    #     if can_move_up(x, y):
+    #         y -= step
+    # if pressed[pygame.K_s]:
+    #     if can_move_down(x, y):
+    #         y += step
+    # if pressed[pygame.K_a]:
+    #     if can_move_left(x, y):
+    #         x -= step
+    # if pressed[pygame.K_d]:
+    #     if can_move_right(x, y):
+    #         x += step
+    #
+    # if y >= height - car_h:
+    #     y = height - step
+    # elif y < 0:
+    #     y = 0
+    # if x > width - car_w:
+    #     x = width - car_w
+    # elif x < 0:
+    #     x = 0
+
+    # screen.blit(can, (width - 40, height - 40))
+
+    # if x == garbageA_x and y == garbageA_y:
+    #     garbageA_x = width - step
+    #     garbageA_y = height - step
+    #     clear += 1
+    # if x == garbageB_x and y == garbageB_y:
+    #     garbageB_x = width - step
+    #     garbageB_y = height - step
+    #     clear += 1
+    # if x == garbageC_x and y == garbageC_y:
+    #     garbageC_x = width - step
+    #     garbageC_y = height - step
+    #     clear += 1
+
+    # screen.blit(garbage, (garbageA_x, garbageA_y))
+    # screen.blit(garbage, (garbageB_x, garbageB_y))
+    # screen.blit(garbage, (garbageC_x, garbageC_y))
+
+    # if clear == 3:
+    #     screen.fill((0, 0, 0))
+    #     screen.blit(text_success, ((width/2)-50, (height/2)-50))
+
+
