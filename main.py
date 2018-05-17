@@ -1,4 +1,6 @@
 import math
+import random
+
 import numpy
 import pygame
 import sys
@@ -9,14 +11,14 @@ path = []
 # 2 dimensional array for obstacles
 obstacles = numpy.array([
     [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 1, 1, 0, 0, 0, 1, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
     [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 1, 1, 0, 1, 0],
+    [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 1, 0, 0, 1, 1, 1, 0, 0, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+    [0, 1, 0, 0, 0, 1, 1, 0, 1, 0],
     [0, 0, 0, 1, 1, 0, 0, 0, 1, 0],
 ])
 
@@ -109,7 +111,7 @@ class AStar(object):
             adj_cells = self.get_adjacent_cells(cell)
             for adj_cell in adj_cells:
                 if adj_cell.g == 0:
-                    adj_cell.g = 10 + cell.g
+                    adj_cell.g = adj_cell.cost + cell.g
                     adj_cell.parent = cell
                 adj_cell.f = adj_cell.g + adj_cell.h
                 if adj_cell not in self.closed:
@@ -121,8 +123,8 @@ class AStar(object):
 pygame.init()
 
 pygame.font.init()
-success = pygame.font.SysFont('Comic Sans MS', 30)
-text_success = success.render('Success', False, (255, 255, 255))
+success = pygame.font.SysFont('Comic Sans MS', 12)
+
 
 width, height = 400, 400
 screen = pygame.display.set_mode((width, height))
@@ -139,6 +141,10 @@ car_h = 40
 # Truck image
 car = pygame.image.load('resources/car.png')
 car = pygame.transform.scale(car, (car_w, car_h))
+
+building = pygame.image.load('resources/dom1.png')
+building = pygame.transform.scale(building, (car_w, car_h))
+
 # TODO: Add rotations of the truck
 # Truck direction
 directions = ['N', 'S', 'E', 'W']
@@ -160,7 +166,7 @@ costs = []
 for row in range(10):
     costs.append([])
     for column in range(10):
-        costs[row].append(10)
+        costs[row].append(random.randint(10, 50))
 
 
 def can_move_up(x, y):
@@ -248,8 +254,10 @@ while True:
             if cell == 1:
                 pygame.draw.rect(screen, (255, 255, 255),
                                  (col_i, row_i, step, step))
-            elif cell == 3:
-                pass
+                screen.blit(building, (col_i, row_i))
+            else:
+                cost = success.render(str(costs[int(row_i/40)][int(col_i/40)]), False, (255, 255, 255))
+                screen.blit(cost, (col_i, row_i))
             col_i += step
             if col_i == width:
                 col_i = 0
@@ -259,7 +267,7 @@ while True:
     screen.blit(car, (x, y))
 
     pygame.display.flip()
-    screen.fill((0, 0, 0))
+    screen.fill((169, 169, 169))
     clock.tick(15)
 
     # pressed = pygame.key.get_pressed()
@@ -307,6 +315,6 @@ while True:
 
     # if clear == 3:
     #     screen.fill((0, 0, 0))
-    #     screen.blit(text_success, ((width/2)-50, (height/2)-50))
+    #
 
 
