@@ -2,16 +2,16 @@ import numpy
 
 
 obstacles = numpy.array([
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 1, 1, 0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 1, 1, 0],
-    [0, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 1, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 1, 1, 1, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0, 0, 0, 1, 0],
-    [0, 1, 0, 0, 0, 1, 1, 0, 1, 0],
-    [0, 0, 0, 1, 1, 0, 0, 0, 1, 0],
+    [0, 2, 0, 1, 1, 0, 0, 2, 0, 1],
+    [0, 1, 2, 2, 0, 1, 2, 1, 0, 0],
+    [0, 1, 1, 1, 2, 1, 0, 1, 1, 0],
+    [0, 1, 0, 0, 0, 0, 0, 0, 2, 0],
+    [0, 0, 0, 1, 1, 1, 1, 0, 1, 0],
+    [2, 1, 0, 1, 2, 0, 0, 2, 1, 1],
+    [0, 1, 2, 1, 1, 0, 1, 0, 0, 0],
+    [2, 1, 0, 0, 0, 0, 0, 0, 1, 0],
+    [2, 1, 0, 1, 0, 1, 1, 2, 1, 2],
+    [0, 2, 0, 2, 0, 1, 2, 0, 1, 2],
 ])
 
 
@@ -63,22 +63,22 @@ class AStar(object):
         cells = []
 
         if cell.direction == 'N':
-            if cell.y > 0 and obstacles[cell.y - 1][cell.x] == 0:
+            if cell.y > 0 and obstacles[cell.y - 1][cell.x] != 1:
                 cells.append(self.get_cell(cell.x, cell.y - 1, cell.direction))
             cells.append(self.get_cell(cell.x, cell.y, 'E'))
             cells.append(self.get_cell(cell.x, cell.y, 'W'))
         elif cell.direction == 'W':
-            if cell.x > 0 and obstacles[cell.y][cell.x - 1] == 0:
+            if cell.x > 0 and obstacles[cell.y][cell.x - 1] != 1:
                 cells.append(self.get_cell(cell.x - 1, cell.y, cell.direction))
             cells.append(self.get_cell(cell.x, cell.y, 'N'))
             cells.append(self.get_cell(cell.x, cell.y, 'S'))
         elif cell.direction == 'E':
-            if cell.x < 9 and obstacles[cell.y][cell.x + 1] == 0:
+            if cell.x < 9 and obstacles[cell.y][cell.x + 1] != 1:
                 cells.append(self.get_cell(cell.x + 1, cell.y, cell.direction))
             cells.append(self.get_cell(cell.x, cell.y, 'S'))
             cells.append(self.get_cell(cell.x, cell.y, 'N'))
         elif cell.direction == 'S':
-            if cell.y < 9 and obstacles[cell.y + 1][cell.x] == 0:
+            if cell.y < 9 and obstacles[cell.y + 1][cell.x] != 1:
                 cells.append(self.get_cell(cell.x, cell.y + 1, cell.direction))
             cells.append(self.get_cell(cell.x, cell.y, 'W'))
             cells.append(self.get_cell(cell.x, cell.y, 'E'))
@@ -117,8 +117,6 @@ class AStar(object):
             self.closed.append(cell)
 
             if cell.x == self.endx and cell.y == self.endy:
-                print('path: ')
-                print(self.display_path(cell))
                 return self.display_path(cell)
 
             adj_cells = self.get_adjacent_cells(cell)
