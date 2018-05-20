@@ -53,6 +53,7 @@ building = pygame.transform.scale(building, (car_width, car_height))
 # TODO: Add rotations of the truck
 # Truck direction
 directions = ['N', 'S', 'E', 'W']
+global direction
 direction = 'S'
 
 # Can image

@@ -43,10 +43,11 @@ class AStar(object):
                         Node(x, y, directions[d], costs[y][x])
                     )
         self.start = self.get_cell(startx, starty, direction)
-        self.end = self.get_cell(endx, endy, direction)
+        self.endx = endx
+        self.endy = endy
 
     def get_heuristic(self, cell):
-        return abs(cell.x - self.end.x) + abs(cell.y - self.end.y)
+        return abs(cell.x - self.endx) + abs(cell.y - self.endy)
 
     def get_cell(self, x, y, direction):
         if direction == 'N':
@@ -79,18 +80,17 @@ class AStar(object):
         elif cell.direction == 'S':
             if cell.y < 9 and obstacles[cell.y + 1][cell.x] == 0:
                 cells.append(self.get_cell(cell.x, cell.y + 1, cell.direction))
-            cells.append(self.get_cell(cell.x, cell.y, 'N'))
-            cells.append(self.get_cell(cell.x, cell.y, 'S'))
+            cells.append(self.get_cell(cell.x, cell.y, 'W'))
+            cells.append(self.get_cell(cell.x, cell.y, 'E'))
 
         return cells
 
-    def display_path(self):
-        cell = self.end
-
+    def display_path(self, cell):
         path = []
         while cell is not self.start:
             path.append((cell.x, cell.y, cell.direction))
             cell = cell.parent
+
         path.reverse()
         return path
 
@@ -116,10 +116,10 @@ class AStar(object):
             key, cell = self.opened.pop(0)
             self.closed.append(cell)
 
-            if cell == self.end:
+            if cell.x == self.endx and cell.y == self.endy:
                 print('path: ')
-                print(self.display_path())
-                return self.display_path()
+                print(self.display_path(cell))
+                return self.display_path(cell)
 
             adj_cells = self.get_adjacent_cells(cell)
             for adj_cell in adj_cells:
