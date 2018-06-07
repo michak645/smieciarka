@@ -1,13 +1,19 @@
-import collections
 import math
 import numpy
+import pydotplus
 import pygame
 import random
 import sys
 
+from sklearn.externals.six import StringIO
+from sklearn.feature_extraction import DictVectorizer
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
+
 from astar import *
 from garbage import *
 from settings import *
+from tree import table, results
+
 
 path = []
 
@@ -36,34 +42,59 @@ today_schedule = schedule[today]
 tasks = []
 for coords, trash in trash_list.items():
     if trash['trash_type'] in today_schedule:
+        trash['collected'] = False
         tasks.append(trash)
+
+print(tasks[0])
 
 print('Today is: {}'.format(today))
 print('Schedule: {}'.format(schedule[today]))
 print('Tasks: {}'.format(len(tasks)))
 
 
-def tasks_costs(tasks, start_x, start_y):
-    tasks_paths = {}
-    for task in tasks:
-        trash_x = task['coordinates'][0]
-        trash_y = task['coordinates'][1]
-        task_path = AStar(
-            start_x,
-            start_y,
-            direction,
-            trash_x,
-            trash_y,
-            costs
-        ).process()
-        tasks_paths[len(task_path)] = task
-    ordered_tasks_paths = collections.OrderedDict(sorted(tasks_paths.items()))
-    return ordered_tasks_paths
-    # return sorted(tasks_paths, key=lambda k: k['coordinates'])
+v = DictVectorizer(sparse=False)
+v.fit_transform(table)
+X = v.fit_transform(table)
+Y = results
+dt = DecisionTreeClassifier()
+dt.fit(X, Y)
 
 
-ble = tasks_costs(tasks, math.floor(x / 40), math.floor(y / 40))
-list(ble.items())[0]
+dot_data = StringIO()
+export_graphviz(
+    dt,
+    out_file=dot_data,
+    feature_names=v.get_feature_names(),
+    filled=True,
+    rounded=True,
+    impurity=False,
+)
+graph = pydotplus.graph_from_dot_data(dot_data.getvalue())
+graph.write_pdf('decision_tree.pdf')
+
+
+def increase_capacity(x, y):
+    global truck_capacity
+    x = math.floor(x / 40)
+    y = math.floor(y / 40)
+    trash_coordinates = (x, y)
+    trash = trash_list.get(trash_coordinates)
+    if trash:
+        check = {
+            'filling': trash['filling'],
+            'day': today,
+            'type': trash['trash_type'],
+            'truck_filling': capacity
+        }
+        if dt.predict(v.transform(check)) and not trash['collected']:
+            if trash['filling'] == 'half':
+                truck_capacity += 1
+            elif trash['filling'] == 'full':
+                truck_capacity += 2
+            print('capacity: {}/{}'.format(truck_capacity, max_capacity))
+            trash['collected'] = True
+            trash['filling'] = 'empty'
+
 
 # building_choices = [building1, building2, building3]
 # building = random.choice(building_choices)
@@ -97,13 +128,50 @@ while True:
             pygame.quit()
             sys.exit()
 
+    if truck_capacity == 0:
+        capacity = 'empty'
+    elif truck_capacity > 0 and truck_capacity < 7:
+        capacity = 'half'
+    elif truck_capacity >= 7:
+        capacity = 'full'
+
+    if tasks and moves == 0:
+        if truck_capacity >= max_capacity - 1:
+            print('capacity: {}/{}'.format(truck_capacity, max_capacity))
+            print('Max capacity of truck reached')
+            print('Going back to start point to get rid of trashes')
+            path = AStar(
+                math.floor(x / 40),
+                math.floor(y / 40),
+                direction,
+                0,
+                0,
+                costs
+            ).process()
+            truck_capacity = 0
+        else:
+            trash = tasks[0]
+            trash_x, trash_y = trash['coordinates']
+            path = AStar(
+                math.floor(x / 40),
+                math.floor(y / 40),
+                direction,
+                trash_x,
+                trash_y,
+                costs
+            ).process()
+            tasks.remove(trash)
+
     if path and moves < len(path):
         x = path[moves][0] * 40
         y = path[moves][1] * 40
         direction = path[moves][2]
-        print(path[moves][2])
+        # wyświetlanie ścieżki
+        # print(path[moves][2])
+        # truck_fuel -= 1
         moves += 1
     else:
+        increase_capacity(x, y)
         moves = 0
         path = []
 
@@ -122,9 +190,24 @@ while True:
                     math.ceil(col_i / 40),
                     math.ceil(row_i / 40)
                 )
-                screen.blit(can, (col_i, row_i))
+                check = {
+                    'filling': trash_list[trash_coordinates]['filling'],
+                    'day': today,
+                    'type': trash_list[trash_coordinates]['trash_type'],
+                    'truck_filling': 'empty'
+                }
+                if check['type'] in schedule[today]:
+                    if check['filling'] == 'empty':
+                        screen.blit(can_yellow, (col_i, row_i))
+                    else:
+                        screen.blit(can_green, (col_i, row_i))
+                else:
+                    screen.blit(can_red, (col_i, row_i))
                 bin_type_string = font.render(
-                    trash_list[trash_coordinates]['trash_type'][:4].lower(),
+                    '{}-{}'.format(
+                        trash_list[trash_coordinates]['trash_type'][:2].upper(),
+                        trash_list[trash_coordinates]['filling'][:1].upper()
+                    ),
                     False,
                     (0, 0, 0)
                 )

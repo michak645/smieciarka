@@ -1,7 +1,7 @@
 import pygame
 
 pygame.font.init()
-font = pygame.font.SysFont('Comic Sans MS', 12)
+font = pygame.font.SysFont('Comic Sans MS', 16)
 
 
 width, height = 400, 400
@@ -33,6 +33,17 @@ car_n = pygame.transform.scale(car_n, (car_width, car_height))
 car_e = pygame.transform.scale(car_e, (car_width, car_height))
 car_w = pygame.transform.scale(car_w, (car_width, car_height))
 
+global truck_capacity
+global truck_fuel
+global max_capacity
+truck_fuel = 30
+truck_capacity = 0
+max_capacity = 8
+
+capacity_options = []
+for cap in range(20):
+    capacity_options.append(cap + 1)
+
 # Truck direction
 global direction
 direction = 'S'
@@ -56,23 +67,29 @@ building2 = pygame.transform.scale(building2, (car_width, car_height))
 
 trash_types = [
     'plastic',
-    'colored_glass',
-    'white_glass',
-    'eco',
+    'glass',
+    'municipal',
     'paper',
-    'mixed',
-    'large',
 ]
 
 trash_fillings = [
     'empty',
-    'half_full',
+    'half',
     'full',
 ]
 
 # Can image
 can = pygame.image.load('resources/can.png')
 can = pygame.transform.scale(can, (car_width, car_height))
+
+can_red = pygame.image.load('resources/can_red.png')
+can_red = pygame.transform.scale(can_red, (car_width, car_height))
+
+can_green = pygame.image.load('resources/can_green.png')
+can_green = pygame.transform.scale(can_green, (car_width, car_height))
+
+can_yellow = pygame.image.load('resources/can_yellow.png')
+can_yellow = pygame.transform.scale(can_yellow, (car_width, car_height))
 
 # Garbage image
 garbage = pygame.image.load('resources/garbage.jpg')
@@ -89,33 +106,13 @@ days = [
     'sunday',
 ]
 
+
 schedule = {
-    'monday': [
-        'mixed',
-        'plastic',
-    ],
-    'tuesday': [
-        'mixed',
-        'colored_glass',
-    ],
-    'wednesday': [
-        'mixed',
-        'eco',
-    ],
-    'thursday': [
-        'mixed',
-        'paper',
-        'plastic',
-    ],
-    'friday': [
-        'large',
-    ],
-    'saturday': [
-        'mixed',
-        'white_glass',
-    ],
-    'sunday': [
-        'mixed',
-        'eco',
-    ],
+    'monday': ['glass', 'municipal', ],
+    'tuesday': ['municipal', 'plastic', ],
+    'wednesday': ['paper', 'glass', ],
+    'thursday': ['plastic', 'glass', ],
+    'friday': ['glass', 'municipal'],
+    'saturday': ['paper', 'plastic'],
+    'sunday': ['glass', ],
 }
