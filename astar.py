@@ -100,7 +100,7 @@ class AStar(object):
         adj.parent = cell
         adj.f = adj.h + adj.g
 
-    def process(self):
+    def process(self, show_cost=None):
         for y in range(10):
             for x in range(10):
                 for d in range(4):
@@ -117,7 +117,10 @@ class AStar(object):
             self.closed.append(cell)
 
             if cell.x == self.endx and cell.y == self.endy:
-                return self.display_path(cell)
+                if not show_cost:
+                    return self.display_path(cell)
+                else:
+                    return cell.f, self.display_path(cell)
 
             adj_cells = self.get_adjacent_cells(cell)
             for adj_cell in adj_cells:

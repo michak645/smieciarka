@@ -13,7 +13,7 @@ from astar import *
 from garbage import *
 from settings import *
 from tree import table, results
-
+from tsp import ShortestPath
 
 path = []
 
@@ -96,8 +96,13 @@ def increase_capacity(x, y):
             trash['filling'] = 'empty'
 
 
-# building_choices = [building1, building2, building3]
-# building = random.choice(building_choices)
+sp = ShortestPath(
+    (math.ceil(x / 40), math.ceil(y / 40), direction),
+    tasks,
+    costs,
+)
+tasks = sp.get_shortest_path()
+
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -161,7 +166,6 @@ while True:
                 costs
             ).process()
             tasks.remove(trash)
-
     if path and moves < len(path):
         x = path[moves][0] * 40
         y = path[moves][1] * 40
