@@ -5,6 +5,10 @@ import pygame
 import random
 import sys
 
+from keras.models import load_model
+from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
+
 from sklearn.externals.six import StringIO
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
@@ -40,8 +44,23 @@ today = random.choice(days)
 today_schedule = schedule[today]
 
 tasks = []
+classifier = load_model('my_model.h5')
 for coords, trash in trash_list.items():
-    if trash['trash_type'] in today_schedule:
+    prediction = ''
+    first_string = trash['trash_type']+'_label_type'
+    test_image = image.img_to_array(trash[first_string][1])
+    test_image = numpy.expand_dims(test_image, axis = 0)
+    result = classifier.predict(test_image)
+    if result[0][0] == 1:
+        prediction = 'glass'
+    elif result[0][1] == 1:
+        prediction = 'municipal'
+    elif result[0][2] == 1:
+        prediction = 'paper'
+    elif result[0][3] == 1:
+        prediction = 'plastic'
+    print('is: '+ trash['trash_type']+' recognized as: '+ prediction)
+    if prediction in today_schedule:
         trash['collected'] = False
         tasks.append(trash)
 
@@ -204,7 +223,15 @@ while True:
                     if check['filling'] == 'empty':
                         screen.blit(can_yellow, (col_i, row_i))
                     else:
-                        screen.blit(can_green, (col_i, row_i))
+                       # screen.blit(can_green, (col_i, row_i))
+                        if check['type'] == 'plastic':
+                            screen.blit(trash_list[trash_coordinates]['plastic_label_type'][0], (col_i, row_i))
+                        elif check['type'] == 'municipal':
+                            screen.blit(trash_list[trash_coordinates]['municipal_label_type'][0], (col_i, row_i))
+                        elif check['type'] == 'glass':
+                            screen.blit(trash_list[trash_coordinates]['glass_label_type'][0], (col_i, row_i))
+                        elif check['type'] == 'paper':
+                            screen.blit(trash_list[trash_coordinates]['paper_label_type'][0], (col_i, row_i))
                 else:
                     screen.blit(can_red, (col_i, row_i))
                 bin_type_string = font.render(

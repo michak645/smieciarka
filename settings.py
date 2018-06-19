@@ -1,5 +1,6 @@
 import pygame
-
+from keras.preprocessing.image import ImageDataGenerator
+from keras.preprocessing import image
 pygame.font.init()
 font = pygame.font.SysFont('Comic Sans MS', 16)
 
@@ -94,6 +95,45 @@ can_yellow = pygame.transform.scale(can_yellow, (car_width, car_height))
 # Garbage image
 garbage = pygame.image.load('resources/garbage.jpg')
 garbage = pygame.transform.scale(garbage, (car_width, car_height))
+
+# Types image
+
+w, h = 2, 4;
+plastic = [[0 for x in range(w)] for y in range(h)]
+
+w, h = 2, 4;
+municipal = [[0 for x in range(w)] for y in range(h)]
+
+w, h = 2, 4;
+glass = [[0 for x in range(w)] for y in range(h)]
+
+w, h = 2, 4;
+paper = [[0 for x in range(w)] for y in range(h)]
+
+for x in range(4):
+  plastic1 = pygame.image.load('resources/plastic'+str(x+1)+'.png')
+  plastic1 = pygame.transform.scale(plastic1, (car_width, car_height))
+  plastica1 = image.load_img('resources/plastic'+str(x+1)+'.png', target_size = (64, 64), grayscale=True)
+  plastic[x][0] = plastic1
+  plastic[x][1] = plastica1
+for x in range(4):
+  glass1 = pygame.image.load('resources/glass'+str(x+1)+'.png')
+  glass1 = pygame.transform.scale(glass1, (car_width, car_height))
+  glassa1 = image.load_img('resources/glass'+str(x+1)+'.png', target_size = (64, 64), grayscale=True)
+  glass[x][0] = glass1
+  glass[x][1] = glassa1
+for x in range(4):
+  municipal1 = pygame.image.load('resources/municipal'+str(x+1)+'.png')
+  municipal1 = pygame.transform.scale(municipal1, (car_width, car_height))
+  municipala1 = image.load_img('resources/municipal'+str(x+1)+'.png', target_size = (64, 64), grayscale=True)
+  municipal[x][0] = municipal1
+  municipal[x][1] = municipala1
+for x in range(4):
+  paper1 = pygame.image.load('resources/paper'+str(x+1)+'.png')
+  paper1 = pygame.transform.scale(paper1, (car_width, car_height))
+  papera1 = image.load_img('resources/paper'+str(x+1)+'.png', target_size = (64, 64), grayscale=True)
+  paper[x][0] = paper1
+  paper[x][1] = papera1
 
 # days list
 days = [
