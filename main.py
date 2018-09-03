@@ -67,7 +67,7 @@ for coords, trash in trash_list.items():
         trash['collected'] = False
         tasks.append(trash)
 
-print(tasks[0])
+#print(tasks[0])
 
 print('Today is: {}'.format(today))
 print('Schedule: {}'.format(schedule[today]))
@@ -96,30 +96,6 @@ graph.write_pdf('decision_tree.pdf')
 
 
 def increase_capacity(x, y):
-    randomeme = str(random.randint(1, 2))
-    plik= random.choice([x for x in os.listdir("C:\\dev\\si\\smieciarka\\resources\\images\\" +randomeme +  "\\")
-                   if os.path.isfile(os.path.join("C:\\dev\\si\\smieciarka\\resources\\images\\" + randomeme + "\\", x))])
-
-#'+ randomeme+'
-#+ plik
-    municipala1 = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\4\\4.jpg' , target_size=(64, 64), grayscale=True)
-    test_image = image.img_to_array(municipala1)
-    test_image = numpy.expand_dims(test_image, axis = 0)
-    result = classifier.predict(test_image)
-    if result[0][0] == 1:
-        prediction = '1'
-    elif result[0][1] == 1:
-        prediction = '2'
-    elif result[0][2] == 1:
-        prediction = '3'
-    elif result[0][3] == 1:
-        prediction = '4'
-
-    print('result[0][0]' + str(result[0][0]))
-    print('result[0][1]' + str(result[0][1]))
-    print('result[0][2]' + str(result[0][2]))
-    print('result[0][3]' + str(result[0][3]))
-    print('Plik ' + plik + '= ' + prediction)
     global truck_capacity
     x = math.floor(x / 40)
     y = math.floor(y / 40)
@@ -221,6 +197,32 @@ while True:
         # truck_fuel -= 1
         moves += 1
     else:
+        randDir = str(random.randint(1, 4))
+        file = random.choice([x for x in os.listdir("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\")
+                              if os.path.isfile(
+                os.path.join("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\", x))])
+
+        classifierNum = load_model('kek.h5')
+
+        #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\' + randDir + '\\' + file,
+         #                          target_size=(64, 64), color_mode='rgb')
+        #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\2\\8.jpg', target_size=(64, 64))
+        get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\image.jpg', target_size=(64, 64))
+        test_image = image.img_to_array(get_image)
+        test_image = numpy.expand_dims(test_image, axis=0)
+        resultNum = classifierNum.predict(test_image)
+        if resultNum[0][0] == 1:
+            predictionNum = '1'
+        elif resultNum[0][1] == 1:
+            predictionNum = '2'
+        elif resultNum[0][2] == 1:
+            predictionNum = '3'
+        elif resultNum[0][3] == 1:
+            predictionNum = '4'
+        else:
+            predictionNum = 'Unknown'
+
+        print('Numer (' +  file +  ')' + randDir + ' == ' + predictionNum)
         increase_capacity(x, y)
         moves = 0
         path = []

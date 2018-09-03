@@ -34,7 +34,7 @@ classifier.add(Dense(4, activation='softmax'))
 
 
 # Compiling the CNN
-op = optimizers.SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
+optimizers.SGD(lr=0.01, momentum=0.0, decay=0.0, nesterov=False)
 classifier.compile(optimizer='rmsprop', loss = 'categorical_crossentropy', metrics = ['accuracy'])
 
 # Part 2 - Fitting the CNN to the images
