@@ -117,6 +117,34 @@ def increase_capacity(x, y):
             trash['collected'] = True
             trash['filling'] = 'empty'
 
+            randDir = str(random.randint(1, 4))
+            file = random.choice([x for x in os.listdir("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\")
+                                  if os.path.isfile(
+                    os.path.join("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\", x))])
+
+            classifierNum = load_model('cnn_network.h5')
+
+            get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\' + randDir + '\\' + file,
+                                      target_size=(64, 64), color_mode='rgb')
+            #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\2\\6.jpg', target_size=(64, 64))
+            #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\image.jpg', target_size=(64, 64))
+            test_image = image.img_to_array(get_image)
+            test_image = numpy.expand_dims(test_image, axis=0)
+            resultNum = classifierNum.predict(test_image)
+            if resultNum[0][0] == 1:
+                predictionNum = '1'
+            elif resultNum[0][1] == 1:
+                predictionNum = '2'
+            elif resultNum[0][2] == 1:
+                predictionNum = '3'
+            elif resultNum[0][3] == 1:
+                predictionNum = '4'
+            else:
+                predictionNum = 'Unknown'
+
+            print('Numer (' + file + ')' + randDir + ' == ' + predictionNum)
+            # print('Numer 2 == ' + predictionNum)
+
 
 sp = ShortestPath(
     (math.ceil(x / 40), math.ceil(y / 40), direction),
@@ -187,6 +215,8 @@ while True:
                 trash_y,
                 costs
             ).process()
+
+
             tasks.remove(trash)
     if path and moves < len(path):
         x = path[moves][0] * 40
@@ -197,32 +227,6 @@ while True:
         # truck_fuel -= 1
         moves += 1
     else:
-        randDir = str(random.randint(1, 4))
-        file = random.choice([x for x in os.listdir("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\")
-                              if os.path.isfile(
-                os.path.join("C:\\dev\\si\\smieciarka\\resources\\images\\" + randDir + "\\", x))])
-
-        classifierNum = load_model('kek.h5')
-
-        #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\' + randDir + '\\' + file,
-         #                          target_size=(64, 64), color_mode='rgb')
-        #get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\2\\8.jpg', target_size=(64, 64))
-        get_image = image.load_img('C:\\dev\\si\\smieciarka\\resources\\images\\image.jpg', target_size=(64, 64))
-        test_image = image.img_to_array(get_image)
-        test_image = numpy.expand_dims(test_image, axis=0)
-        resultNum = classifierNum.predict(test_image)
-        if resultNum[0][0] == 1:
-            predictionNum = '1'
-        elif resultNum[0][1] == 1:
-            predictionNum = '2'
-        elif resultNum[0][2] == 1:
-            predictionNum = '3'
-        elif resultNum[0][3] == 1:
-            predictionNum = '4'
-        else:
-            predictionNum = 'Unknown'
-
-        print('Numer (' +  file +  ')' + randDir + ' == ' + predictionNum)
         increase_capacity(x, y)
         moves = 0
         path = []
